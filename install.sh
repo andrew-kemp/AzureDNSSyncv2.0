@@ -44,13 +44,19 @@ sudo chown -R root:root /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azure
 sudo chmod 755 /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
 sudo chmod 750 /etc/azurednssync2/certs
 
-echo "Setting up group for certificate access..."
-if ! getent group $GROUP >/dev/null; then
-    sudo groupadd $GROUP
+# -- Group setup for cert access --
+GROUP=azurednssync
+
+# Remove group if it exists, then recreate to guarantee clean membership
+if getent group $GROUP >/dev/null; then
+    echo "Group $GROUP exists, removing and recreating it to ensure fresh membership..."
+    sudo gpasswd -d $USER $GROUP || true
+    sudo groupdel $GROUP
 fi
+
+sudo groupadd $GROUP
 sudo usermod -a -G $GROUP $USER
 
-# Fix permissions on certs directory and certificate file if present
 sudo chown root:$GROUP /etc/azurednssync2/certs
 sudo chmod 750 /etc/azurednssync2/certs
 if [ -f /etc/azurednssync2/certs/cert.pem ]; then
@@ -104,7 +110,7 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-echo "Reloading systemd, enabling and starting $SERVICE_NAME service..."
+echo "Reloading systemd, enabling $SERVICE_NAME service..."
 sudo systemctl daemon-reload
 sudo systemctl enable $SERVICE_NAME
 

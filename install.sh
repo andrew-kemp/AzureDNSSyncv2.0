@@ -8,7 +8,8 @@ INSTALL_DIR="/opt/azurednssync2"
 PYTHON_VERSION=$(python3 --version | awk '{print $2}' | cut -d. -f1,2)
 VENV_PKG="python${PYTHON_VERSION}-venv"
 SERVICE_NAME="azurednssync2"
-USER_SERVICE="$(whoami)"
+GROUP="azurednssync"
+USER_SERVICE="$USER"
 
 echo "Updating system packages..."
 sudo apt-get update
@@ -41,7 +42,21 @@ sudo cp "$TMP_DIR/requirements.txt" $INSTALL_DIR/
 echo "Setting permissions for system-owned directories..."
 sudo chown -R root:root /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
 sudo chmod 755 /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
-sudo chmod 700 /etc/azurednssync2/certs
+sudo chmod 750 /etc/azurednssync2/certs
+
+echo "Setting up group for certificate access..."
+if ! getent group $GROUP >/dev/null; then
+    sudo groupadd $GROUP
+fi
+sudo usermod -a -G $GROUP $USER
+
+# Fix permissions on certs directory and certificate file if present
+sudo chown root:$GROUP /etc/azurednssync2/certs
+sudo chmod 750 /etc/azurednssync2/certs
+if [ -f /etc/azurednssync2/certs/cert.pem ]; then
+    sudo chown root:$GROUP /etc/azurednssync2/certs/cert.pem
+    sudo chmod 640 /etc/azurednssync2/certs/cert.pem
+fi
 
 echo "Changing ownership of $INSTALL_DIR to current user for venv setup and file edits..."
 sudo chown -R $USER:$USER $INSTALL_DIR
@@ -79,9 +94,9 @@ After=network.target
 
 [Service]
 User=$USER_SERVICE
-Group=$USER_SERVICE
+Group=$GROUP
 WorkingDirectory=$INSTALL_DIR
-Environment=\"PATH=$INSTALL_DIR/venv/bin\"
+Environment="PATH=$INSTALL_DIR/venv/bin"
 ExecStart=$INSTALL_DIR/venv/bin/python3 $INSTALL_DIR/run.py
 Restart=always
 
@@ -92,9 +107,11 @@ EOF
 echo "Reloading systemd, enabling and starting $SERVICE_NAME service..."
 sudo systemctl daemon-reload
 sudo systemctl enable $SERVICE_NAME
-sudo systemctl restart $SERVICE_NAME
 
 echo ""
-echo "Install and service setup complete!"
+echo "IMPORTANT: You must log out and log back in (or run 'newgrp $GROUP') for group membership to take effect before starting the service!"
+echo "After relogin, start the service with:"
+echo "  sudo systemctl start $SERVICE_NAME"
+echo ""
 echo "To check status: sudo systemctl status $SERVICE_NAME"
 echo "To see logs:    sudo journalctl -u $SERVICE_NAME -f"

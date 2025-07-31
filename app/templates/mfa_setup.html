@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>AzureDNSSync2 MFA Setup</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="container">
+      <h2>{% if verify_only %}MFA Verification{% else %}MFA Setup{% endif %}</h2>
+      {% if not verify_only %}
+        <p>Scan the QR code with Microsoft Authenticator or enter the secret manually:</p>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ qr_url }}" alt="QR Code">
+        <p><b>Secret:</b> {{ secret }}</p>
+      {% endif %}
+      <form method="POST">
+        <input name="token" placeholder="Authenticator Code" required>
+        <button type="submit">{% if verify_only %}Verify{% else %}Activate MFA{% endif %}</button>
+      </form>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+    </div>
+  </body>
+</html>

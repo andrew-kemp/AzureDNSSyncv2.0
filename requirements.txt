@@ -1,0 +1,7 @@
+Flask
+Flask-Mail
+python-pam
+pyotp
+APScheduler
+cryptography
+python-dotenv

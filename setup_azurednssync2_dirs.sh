@@ -1,30 +1,57 @@
 #!/bin/bash
 
-# Base install directories
+# Application directories
 BASE_APP_DIR="/opt/azurednssync2"
-BASE_CONFIG_DIR="/etc/azurednssync2"
-BASE_CERTS_DIR="$BASE_CONFIG_DIR/certs"
-BASE_LOG_DIR="/var/log/azurednssync2"
-BASE_LIB_DIR="/var/lib/azurednssync2"
+APP_SUBDIRS=(
+  "app"
+  "app/static"
+  "app/templates"
+  "app/utils"
+  "app/tests"
+)
+# Optional directories for documentation and scripts
+DOCS_DIR="/opt/azurednssync2/docs"
+SCRIPTS_DIR="/opt/azurednssync2/scripts"
 
-# Create directories
+# Configuration, certificate, log, and runtime data directories
+CONFIG_DIR="/etc/azurednssync2"
+CERTS_DIR="$CONFIG_DIR/certs"
+LOG_DIR="/var/log/azurednssync2"
+LIB_DIR="/var/lib/azurednssync2"
+
+# Create application codebase and subdirectories
 sudo mkdir -p "$BASE_APP_DIR"
-sudo mkdir -p "$BASE_CONFIG_DIR"
-sudo mkdir -p "$BASE_CERTS_DIR"
-sudo mkdir -p "$BASE_LOG_DIR"
-sudo mkdir -p "$BASE_LIB_DIR"
+for subdir in "${APP_SUBDIRS[@]}"; do
+  sudo mkdir -p "$BASE_APP_DIR/$subdir"
+done
 
-# Set permissions
-sudo chown root:root "$BASE_CONFIG_DIR" "$BASE_CERTS_DIR"
-sudo chmod 700 "$BASE_CERTS_DIR"
-sudo chmod 755 "$BASE_CONFIG_DIR"
+# Optional: documentation and scripts
+sudo mkdir -p "$DOCS_DIR"
+sudo mkdir -p "$SCRIPTS_DIR"
+
+# Create config, certs, logs, runtime data
+sudo mkdir -p "$CONFIG_DIR"
+sudo mkdir -p "$CERTS_DIR"
+sudo mkdir -p "$LOG_DIR"
+sudo mkdir -p "$LIB_DIR"
+
+# Set permissions (tighten certs)
+sudo chown root:root "$CONFIG_DIR" "$CERTS_DIR"
+sudo chmod 700 "$CERTS_DIR"
+sudo chmod 755 "$CONFIG_DIR"
 sudo chmod 755 "$BASE_APP_DIR"
-sudo chmod 755 "$BASE_LOG_DIR"
-sudo chmod 755 "$BASE_LIB_DIR"
+sudo chmod 755 "$LOG_DIR"
+sudo chmod 755 "$LIB_DIR"
 
-echo "Directory structure for AzureDNSSync2 has been created:"
+echo "AzureDNSSync2 directory structure created:"
 echo "  Application code:   $BASE_APP_DIR"
-echo "  Config:             $BASE_CONFIG_DIR"
-echo "  Certificates:       $BASE_CERTS_DIR (root only)"
-echo "  Logs:               $BASE_LOG_DIR"
-echo "  Runtime data:       $BASE_LIB_DIR"
+echo "  Static files:       $BASE_APP_DIR/app/static"
+echo "  Templates:          $BASE_APP_DIR/app/templates"
+echo "  Python utils:       $BASE_APP_DIR/app/utils"
+echo "  Unit tests:         $BASE_APP_DIR/app/tests"
+echo "  Documentation:      $DOCS_DIR"
+echo "  Scripts:            $SCRIPTS_DIR"
+echo "  Config:             $CONFIG_DIR"
+echo "  Certificates:       $CERTS_DIR (root only)"
+echo "  Logs:               $LOG_DIR"
+echo "  Runtime data:       $LIB_DIR"

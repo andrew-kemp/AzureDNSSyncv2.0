@@ -37,6 +37,11 @@ sudo cp "$TMP_DIR/requirements.txt" $INSTALL_DIR/
 [ -d "$TMP_DIR/docs" ] && sudo rsync -a "$TMP_DIR/docs/" $INSTALL_DIR/docs/
 [ -d "$TMP_DIR/scripts" ] && sudo rsync -a "$TMP_DIR/scripts/" $INSTALL_DIR/scripts/
 
+echo "Ensuring 'six' is in requirements.txt..."
+if ! grep -q '^six' "$INSTALL_DIR/requirements.txt"; then
+    echo "six" >> "$INSTALL_DIR/requirements.txt"
+fi
+
 echo "Setting permissions for system-owned directories..."
 sudo chown -R root:root /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
 sudo chmod 755 /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
@@ -49,14 +54,27 @@ echo "Setting up Python virtual environment..."
 cd $INSTALL_DIR
 python3 -m venv venv
 source venv/bin/activate
+
+echo "Upgrading pip and installing Python requirements (including six)..."
 pip install --upgrade pip
 pip install -r requirements.txt
+
+# Double-check 'six' installation in case of pip issues
+if ! python -c "import six" &>/dev/null; then
+    echo "'six' module not found after requirements install, installing via pip..."
+    pip install six
+fi
 
 echo "Cleaning up temporary directory..."
 rm -rf "$TMP_DIR"
 
 echo "Install complete!"
-echo "To run the app:"
-echo "cd $INSTALL_DIR"
-echo "source venv/bin/activate"
-echo "sudo python3 run.py"
+echo ""
+echo "To run the app, use:"
+echo "  cd $INSTALL_DIR"
+echo "  source venv/bin/activate"
+echo "  python3 run.py"
+echo ""
+echo "Do NOT use 'sudo' to run the app unless you specifically need root privileges."
+echo "If you must use sudo, run:"
+echo "  sudo env \"PATH=\$PATH\" \"VIRTUAL_ENV=\$VIRTUAL_ENV\" python3 run.py"

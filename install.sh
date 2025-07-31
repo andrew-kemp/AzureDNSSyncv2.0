@@ -10,12 +10,13 @@ VENV_PKG="python${PYTHON_VERSION}-venv"
 SERVICE_NAME="azurednssync2"
 GROUP="azurednssync"
 USER_SERVICE="$USER"
+CERT_PATH="/etc/azurednssync2/certs/cert.pem"
 
 echo "Updating system packages..."
 sudo apt-get update
 
 echo "Installing required system packages..."
-sudo apt-get install -y python3 python3-pip "$VENV_PKG" git libpam0g-dev gcc libssl-dev libffi-dev
+sudo apt-get install -y python3 python3-pip "$VENV_PKG" git libpam0g-dev gcc libssl-dev libffi-dev openssl
 
 echo "Cloning the repository to $TMP_DIR..."
 rm -rf "$TMP_DIR"
@@ -44,10 +45,15 @@ sudo chown -R root:root /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azure
 sudo chmod 755 /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
 sudo chmod 750 /etc/azurednssync2/certs
 
-# -- Group setup for cert access --
-GROUP=azurednssync
+# --- Create self-signed certificate if missing ---
+if [ ! -f "$CERT_PATH" ]; then
+    echo "No certificate found at $CERT_PATH. Generating a self-signed certificate..."
+    sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout "$CERT_PATH" -out "$CERT_PATH" \
+        -subj "/CN=localhost"
+fi
 
-# Remove group if it exists, then recreate to guarantee clean membership
+# --- Group setup for cert access ---
 if getent group $GROUP >/dev/null; then
     echo "Group $GROUP exists, removing and recreating it to ensure fresh membership..."
     sudo gpasswd -d $USER $GROUP || true
@@ -59,10 +65,8 @@ sudo usermod -a -G $GROUP $USER
 
 sudo chown root:$GROUP /etc/azurednssync2/certs
 sudo chmod 750 /etc/azurednssync2/certs
-if [ -f /etc/azurednssync2/certs/cert.pem ]; then
-    sudo chown root:$GROUP /etc/azurednssync2/certs/cert.pem
-    sudo chmod 640 /etc/azurednssync2/certs/cert.pem
-fi
+sudo chown root:$GROUP "$CERT_PATH"
+sudo chmod 640 "$CERT_PATH"
 
 echo "Changing ownership of $INSTALL_DIR to current user for venv setup and file edits..."
 sudo chown -R $USER:$USER $INSTALL_DIR
@@ -115,9 +119,12 @@ sudo systemctl daemon-reload
 sudo systemctl enable $SERVICE_NAME
 
 echo ""
-echo "IMPORTANT: You must log out and log back in (or run 'newgrp $GROUP') for group membership to take effect before starting the service!"
-echo "After relogin, start the service with:"
+echo "To apply your new group membership immediately, this script will now start a new shell session as the 'azurednssync' group."
+echo "When you see your prompt again, you can start the service right away:"
 echo "  sudo systemctl start $SERVICE_NAME"
 echo ""
 echo "To check status: sudo systemctl status $SERVICE_NAME"
 echo "To see logs:    sudo journalctl -u $SERVICE_NAME -f"
+echo ""
+
+exec sudo newgrp $GROUP

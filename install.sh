@@ -2,12 +2,13 @@
 
 set -e
 
-# Variables
 REPO_URL="https://github.com/andrew-kemp/AzureDNSSyncv2.0.git"
 TMP_DIR=~/azurednssync_tmp
 INSTALL_DIR="/opt/azurednssync2"
 PYTHON_VERSION=$(python3 --version | awk '{print $2}' | cut -d. -f1,2)
 VENV_PKG="python${PYTHON_VERSION}-venv"
+SERVICE_NAME="azurednssync2"
+USER_SERVICE="$(whoami)"
 
 echo "Updating system packages..."
 sudo apt-get update
@@ -59,7 +60,6 @@ echo "Upgrading pip and installing Python requirements (including six)..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Double-check 'six' installation in case of pip issues
 if ! python -c "import six" &>/dev/null; then
     echo "'six' module not found after requirements install, installing via pip..."
     pip install six
@@ -68,13 +68,33 @@ fi
 echo "Cleaning up temporary directory..."
 rm -rf "$TMP_DIR"
 
-echo "Install complete!"
+echo "Creating systemd service file..."
+
+SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+
+sudo bash -c "cat > $SERVICE_FILE" <<EOF
+[Unit]
+Description=Azure DNS Sync 2.0 Flask App
+After=network.target
+
+[Service]
+User=$USER_SERVICE
+Group=$USER_SERVICE
+WorkingDirectory=$INSTALL_DIR
+Environment=\"PATH=$INSTALL_DIR/venv/bin\"
+ExecStart=$INSTALL_DIR/venv/bin/python3 $INSTALL_DIR/run.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "Reloading systemd, enabling and starting $SERVICE_NAME service..."
+sudo systemctl daemon-reload
+sudo systemctl enable $SERVICE_NAME
+sudo systemctl restart $SERVICE_NAME
+
 echo ""
-echo "To run the app, use:"
-echo "  cd $INSTALL_DIR"
-echo "  source venv/bin/activate"
-echo "  python3 run.py"
-echo ""
-echo "Do NOT use 'sudo' to run the app unless you specifically need root privileges."
-echo "If you must use sudo, run:"
-echo "  sudo env \"PATH=\$PATH\" \"VIRTUAL_ENV=\$VIRTUAL_ENV\" python3 run.py"
+echo "Install and service setup complete!"
+echo "To check status: sudo systemctl status $SERVICE_NAME"
+echo "To see logs:    sudo journalctl -u $SERVICE_NAME -f"

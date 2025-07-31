@@ -37,18 +37,18 @@ sudo cp "$TMP_DIR/requirements.txt" $INSTALL_DIR/
 [ -d "$TMP_DIR/docs" ] && sudo rsync -a "$TMP_DIR/docs/" $INSTALL_DIR/docs/
 [ -d "$TMP_DIR/scripts" ] && sudo rsync -a "$TMP_DIR/scripts/" $INSTALL_DIR/scripts/
 
-echo "Ensuring 'six' is in requirements.txt..."
-if ! grep -q '^six' "$INSTALL_DIR/requirements.txt"; then
-    echo "six" >> "$INSTALL_DIR/requirements.txt"
-fi
-
 echo "Setting permissions for system-owned directories..."
 sudo chown -R root:root /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
 sudo chmod 755 /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
 sudo chmod 700 /etc/azurednssync2/certs
 
-echo "Changing ownership of $INSTALL_DIR to current user for venv setup..."
+echo "Changing ownership of $INSTALL_DIR to current user for venv setup and file edits..."
 sudo chown -R $USER:$USER $INSTALL_DIR
+
+echo "Ensuring 'six' is in requirements.txt..."
+if ! grep -q '^six' "$INSTALL_DIR/requirements.txt"; then
+    echo "six" >> "$INSTALL_DIR/requirements.txt"
+fi
 
 echo "Setting up Python virtual environment..."
 cd $INSTALL_DIR

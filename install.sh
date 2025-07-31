@@ -10,7 +10,9 @@ VENV_PKG="python${PYTHON_VERSION}-venv"
 SERVICE_NAME="azurednssync2"
 GROUP="azurednssync"
 USER_SERVICE="$USER"
-CERT_PATH="/etc/azurednssync2/certs/cert.pem"
+CERT_DIR="/etc/azurednssync2/certs"
+CERT_PATH="$CERT_DIR/cert.pem"
+KEY_PATH="$CERT_DIR/key.pem"
 
 echo "Updating system packages..."
 sudo apt-get update
@@ -29,7 +31,7 @@ sudo mkdir -p $INSTALL_DIR/app/utils
 sudo mkdir -p $INSTALL_DIR/app/tests
 sudo mkdir -p $INSTALL_DIR/docs
 sudo mkdir -p $INSTALL_DIR/scripts
-sudo mkdir -p /etc/azurednssync2/certs
+sudo mkdir -p $CERT_DIR
 sudo mkdir -p /var/log/azurednssync2
 sudo mkdir -p /var/lib/azurednssync2
 
@@ -43,13 +45,13 @@ sudo cp "$TMP_DIR/requirements.txt" $INSTALL_DIR/
 echo "Setting permissions for system-owned directories..."
 sudo chown -R root:root /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
 sudo chmod 755 /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
-sudo chmod 750 /etc/azurednssync2/certs
+sudo chmod 750 $CERT_DIR
 
-# --- Create self-signed certificate if missing ---
-if [ ! -f "$CERT_PATH" ]; then
-    echo "No certificate found at $CERT_PATH. Generating a self-signed certificate..."
+# --- Create self-signed certificate and key if missing ---
+if [ ! -f "$CERT_PATH" ] || [ ! -f "$KEY_PATH" ]; then
+    echo "No certificate or key found at $CERT_PATH and $KEY_PATH. Generating self-signed certificate and key..."
     sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-        -keyout "$CERT_PATH" -out "$CERT_PATH" \
+        -keyout "$KEY_PATH" -out "$CERT_PATH" \
         -subj "/CN=localhost"
 fi
 
@@ -63,10 +65,10 @@ fi
 sudo groupadd $GROUP
 sudo usermod -a -G $GROUP $USER
 
-sudo chown root:$GROUP /etc/azurednssync2/certs
-sudo chmod 750 /etc/azurednssync2/certs
-sudo chown root:$GROUP "$CERT_PATH"
-sudo chmod 640 "$CERT_PATH"
+sudo chown root:$GROUP $CERT_DIR
+sudo chmod 750 $CERT_DIR
+sudo chown root:$GROUP "$CERT_PATH" "$KEY_PATH"
+sudo chmod 640 "$CERT_PATH" "$KEY_PATH"
 
 echo "Changing ownership of $INSTALL_DIR to current user for venv setup and file edits..."
 sudo chown -R $USER:$USER $INSTALL_DIR
@@ -119,12 +121,18 @@ sudo systemctl daemon-reload
 sudo systemctl enable $SERVICE_NAME
 
 echo ""
-echo "To apply your new group membership immediately, this script will now start a new shell session as the 'azurednssync' group."
-echo "When you see your prompt again, you can start the service right away:"
+echo "=========================================================================="
+echo "INSTALL COMPLETE"
+echo "=========================================================================="
+echo ""
+echo "IMPORTANT:"
+echo " - You must start a new shell with the correct group membership before starting the service."
+echo " - Either log out and log in, or run:  sudo newgrp $GROUP"
+echo ""
+echo "Once you have done that, start the service with:"
 echo "  sudo systemctl start $SERVICE_NAME"
 echo ""
 echo "To check status: sudo systemctl status $SERVICE_NAME"
 echo "To see logs:    sudo journalctl -u $SERVICE_NAME -f"
+echo "=========================================================================="
 echo ""
-
-exec sudo newgrp $GROUP

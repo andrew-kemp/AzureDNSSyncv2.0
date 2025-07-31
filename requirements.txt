@@ -8,3 +8,4 @@ python-pam
 cryptography
 cffi
 six
+PyYAML

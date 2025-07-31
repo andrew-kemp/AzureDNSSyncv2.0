@@ -1,7 +1,10 @@
 Flask
 Flask-Mail
-python-pam
-pyotp
 APScheduler
-cryptography
 python-dotenv
+pyotp
+tzlocal
+python-pam
+cryptography
+cffi
+six

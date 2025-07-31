@@ -1,19 +1,27 @@
-from app import create_app
 import os
+from flask import Flask, redirect, url_for, request
+from app.routes_setup import setup_bp, is_configured
 
-app = create_app()
+app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "change_this_in_production")
 
-if __name__ == '__main__':
-    CERT_PATH = app.config['CERT_PATH']
-    ADMIN_EMAIL = app.config['ADMIN_EMAIL']
+# Register setup blueprint
+app.register_blueprint(setup_bp)
 
-    # Import and start scheduler
-    from app.scheduler import schedule_notifications
-    schedule_notifications(CERT_PATH, ADMIN_EMAIL)
+# Example of main blueprint (replace with your real main app logic)
+from flask import Blueprint, render_template
+main_bp = Blueprint('main', __name__)
 
-    # Run Flask with HTTPS
-    app.run(
-        host='0.0.0.0',
-        port=8443,
-        ssl_context=(CERT_PATH, app.config['CERT_KEY_PATH'])
-    )
+@main_bp.route("/")
+def index():
+    return render_template("index.html")
+
+app.register_blueprint(main_bp)
+
+@app.before_request
+def enforce_setup():
+    if not is_configured() and not (request.endpoint or "").startswith("setup."):
+        return redirect(url_for("setup.setup"))
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8443, ssl_context=("/etc/azurednssync2/certs/cert.pem", "/etc/azurednssync2/certs/key.pem"))

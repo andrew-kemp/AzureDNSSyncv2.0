@@ -2,7 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 import os
 import yaml
 
-setup_bp = Blueprint('setup', __name__)
+# Explicitly set template_folder so Flask finds setup.html in app/templates/
+setup_bp = Blueprint('setup', __name__, template_folder='templates')
 
 CONFIG_PATH = "/etc/azurednssync2/config.yaml"
 

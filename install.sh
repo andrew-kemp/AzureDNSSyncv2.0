@@ -16,6 +16,8 @@ CERT_PATH="$CERT_DIR/${CERT_NAME}.pem"
 KEY_PATH="$CERT_DIR/${CERT_NAME}.key"
 MFA_FILE="$DATA_DIR/user_mfa.json"
 LOG_DIR="/var/log/$SERVICE_NAME"
+CONFIG_DIR="/etc/azurednssync2"
+CONFIG_FILE="$CONFIG_DIR/config.yaml"
 
 echo "Updating system packages..."
 sudo apt-get update
@@ -40,6 +42,7 @@ sudo mkdir -p $INSTALL_DIR/docs
 sudo mkdir -p $INSTALL_DIR/scripts
 sudo mkdir -p $CERT_DIR
 sudo mkdir -p $LOG_DIR
+sudo mkdir -p $CONFIG_DIR
 
 echo "Copying application files to $APP_DIR..."
 sudo rsync -a "$TMP_DIR/app/" "$APP_DIR/"
@@ -49,8 +52,8 @@ sudo cp "$TMP_DIR/requirements.txt" "$INSTALL_DIR/requirements.txt"
 [ -d "$TMP_DIR/scripts" ] && sudo rsync -a "$TMP_DIR/scripts/" "$INSTALL_DIR/scripts/"
 
 echo "Setting permissions for system-owned directories..."
-sudo chown -R root:$GROUP $DATA_DIR $LOG_DIR
-sudo chmod 755 $DATA_DIR $LOG_DIR
+sudo chown -R root:$GROUP $DATA_DIR $LOG_DIR $CONFIG_DIR
+sudo chmod 755 $DATA_DIR $LOG_DIR $CONFIG_DIR
 sudo chmod 750 $CERT_DIR
 
 # --- Create self-signed certificate and key if missing ---
@@ -120,6 +123,13 @@ sudo chown root:$GROUP "$MFA_FILE"
 sudo chmod 660 "$MFA_FILE"
 sudo chown root:$GROUP "$DATA_DIR"
 sudo chmod 770 "$DATA_DIR"
+
+# --- Ensure config.yaml exists and is writable by group ---
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "# AzureDNSSync2 config" | sudo tee "$CONFIG_FILE" > /dev/null
+fi
+sudo chown root:$GROUP "$CONFIG_FILE"
+sudo chmod 660 "$CONFIG_FILE"
 
 echo "Creating systemd service file..."
 

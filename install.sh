@@ -5,6 +5,7 @@ set -e
 REPO_URL="https://github.com/andrew-kemp/AzureDNSSyncv2.0.git"
 TMP_DIR=~/azurednssync_tmp
 INSTALL_DIR="/opt/azurednssync2"
+APP_DIR="$INSTALL_DIR/app"
 PYTHON_VERSION=$(python3 --version | awk '{print $2}' | cut -d. -f1,2)
 VENV_PKG="python${PYTHON_VERSION}-venv"
 SERVICE_NAME="azurednssync2"
@@ -25,26 +26,26 @@ rm -rf "$TMP_DIR"
 git clone "$REPO_URL" "$TMP_DIR"
 
 echo "Creating target directories..."
-sudo mkdir -p $INSTALL_DIR/app/static
-sudo mkdir -p $INSTALL_DIR/app/templates
-sudo mkdir -p $INSTALL_DIR/app/utils
-sudo mkdir -p $INSTALL_DIR/app/tests
+sudo mkdir -p $APP_DIR/static
+sudo mkdir -p $APP_DIR/templates
+sudo mkdir -p $APP_DIR/utils
+sudo mkdir -p $APP_DIR/tests
 sudo mkdir -p $INSTALL_DIR/docs
 sudo mkdir -p $INSTALL_DIR/scripts
 sudo mkdir -p $CERT_DIR
-sudo mkdir -p /var/log/azurednssync2
-sudo mkdir -p /var/lib/azurednssync2
+sudo mkdir -p /var/log/$SERVICE_NAME
+sudo mkdir -p /var/lib/$SERVICE_NAME
 
-echo "Copying application files to $INSTALL_DIR..."
-sudo rsync -a "$TMP_DIR/app/" $INSTALL_DIR/app/
-sudo cp "$TMP_DIR/run.py" $INSTALL_DIR/
-sudo cp "$TMP_DIR/requirements.txt" $INSTALL_DIR/
+echo "Copying application files to $APP_DIR..."
+sudo rsync -a "$TMP_DIR/app/" $APP_DIR/
+sudo cp "$TMP_DIR/run.py" $APP_DIR/run.py
+sudo cp "$TMP_DIR/requirements.txt" $INSTALL_DIR/requirements.txt
 [ -d "$TMP_DIR/docs" ] && sudo rsync -a "$TMP_DIR/docs/" $INSTALL_DIR/docs/
 [ -d "$TMP_DIR/scripts" ] && sudo rsync -a "$TMP_DIR/scripts/" $INSTALL_DIR/scripts/
 
 echo "Setting permissions for system-owned directories..."
-sudo chown -R root:root /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
-sudo chmod 755 /etc/azurednssync2 /var/log/azurednssync2 /var/lib/azurednssync2
+sudo chown -R root:root /etc/azurednssync2 /var/log/$SERVICE_NAME /var/lib/$SERVICE_NAME
+sudo chmod 755 /etc/azurednssync2 /var/log/$SERVICE_NAME /var/lib/$SERVICE_NAME
 sudo chmod 750 $CERT_DIR
 
 # --- Create self-signed certificate and key if missing ---
@@ -107,9 +108,9 @@ After=network.target
 [Service]
 User=$USER_SERVICE
 Group=$GROUP
-WorkingDirectory=$INSTALL_DIR
-Environment="PATH=$INSTALL_DIR/venv/bin"
-ExecStart=$INSTALL_DIR/venv/bin/python3 $INSTALL_DIR/run.py
+WorkingDirectory=$APP_DIR
+Environment=\"PATH=$INSTALL_DIR/venv/bin\"
+ExecStart=$INSTALL_DIR/venv/bin/python3 run.py
 Restart=always
 
 [Install]

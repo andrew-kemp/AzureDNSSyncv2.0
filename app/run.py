@@ -111,8 +111,9 @@ def verify_mfa():
 
 @app.before_request
 def enforce_login_and_setup():
-    allowed_endpoints = {"login", "static", "mfa_setup", "verify_mfa", "mfa_qr"}
+    allowed_endpoints = {"login", "setup", "static", "mfa_setup", "verify_mfa", "mfa_qr", "favicon"}
     endpoint = (request.endpoint or "").split('.')[-1]
+    # Allow access to static files and login/setup related pages
     if not session.get("logged_in") and endpoint not in allowed_endpoints:
         return redirect(url_for("login"))
     username = session.get('username')

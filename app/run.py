@@ -6,11 +6,11 @@ import qrcode
 from flask import Flask, redirect, url_for, request, session, flash, render_template, send_file
 from pam import pam
 from routes_setup import setup_bp, is_configured
+from user_mfa import load_mfa_data, save_mfa_data
 
-USER_MFA = {}
+USER_MFA = load_mfa_data()  # Persistent MFA data
 
 app = Flask(__name__)
-# Invalidate all sessions on restart
 app.secret_key = secrets.token_hex(32)
 
 app.register_blueprint(setup_bp)
@@ -53,6 +53,7 @@ def mfa_setup():
     if username not in USER_MFA:
         secret = pyotp.random_base32()
         USER_MFA[username] = {"secret": secret, "enabled": False}
+        save_mfa_data(USER_MFA)
     else:
         secret = USER_MFA[username]["secret"]
     totp = pyotp.TOTP(secret)
@@ -60,6 +61,7 @@ def mfa_setup():
         code = request.form.get("mfa_code")
         if totp.verify(code):
             USER_MFA[username]["enabled"] = True
+            save_mfa_data(USER_MFA)
             session['mfa_authenticated'] = True
             flash("MFA setup complete!", "success")
             return redirect(url_for("setup.setup") if not is_configured() else url_for("index"))
@@ -102,11 +104,11 @@ def verify_mfa():
 
 @app.route('/download_cert')
 def download_cert():
-    cert_path = '/etc/azurednssync2/certs/cert.pem'  # update this path if needed
+    cert_path = '/etc/azurednssync2/certs/cert.crt'
     if not os.path.isfile(cert_path):
         flash("Certificate file not found.", "danger")
         return redirect(url_for("setup.setup"))
-    return send_file(cert_path, as_attachment=True, download_name='cert.pem')
+    return send_file(cert_path, as_attachment=True, download_name='cert.crt')
 
 @app.before_request
 def enforce_user_flow():
@@ -140,7 +142,7 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8443,
         ssl_context=(
-            "/etc/azurednssync2/certs/cert.pem",
-            "/etc/azurednssync2/certs/key.pem"
+            "/etc/azurednssync2/certs/cert.crt",
+            "/etc/azurednssync2/certs/cert.key"
         )
     )

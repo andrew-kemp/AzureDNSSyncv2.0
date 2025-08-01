@@ -23,17 +23,12 @@
                    value="{{ request.form.subscription_id or '' }}"
                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
 
-            <label for="client_secret">Client Secret:</label>
-            <input type="password" name="client_secret" id="client_secret"
-                   value="{{ request.form.client_secret or '' }}"
-                   placeholder="Client Secret" required>
-
             <label for="certificate_path">Certificate Path (.pem):</label>
             <input type="text" name="certificate_path" id="certificate_path"
                    value="{{ request.form.certificate_path or '/etc/azurednssync2/certs/cert.pem' }}"
                    placeholder="/etc/azurednssync2/certs/cert.pem" required>
 
-            <!-- Certificate Password removed as requested -->
+            <!-- Certificate Password and Client Secret have been removed -->
 
             <label for="resource_group">Resource Group:</label>
             <input type="text" name="resource_group" id="resource_group"

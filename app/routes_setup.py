@@ -20,6 +20,7 @@ def setup():
         client_secret = request.form.get("client_secret", "").strip()
         subscription_id = request.form.get("subscription_id", "").strip()
         certificate_path = request.form.get("certificate_path", "").strip()
+        # cert_password = request.form.get("certificate_password", "").strip()  # REMOVED
         resource_group = request.form.get("resource_group", "").strip()
         zone_name = request.form.get("zone_name", "").strip()
         record_set_name = request.form.get("record_set_name", "").strip()
@@ -28,7 +29,6 @@ def setup():
         email_to = request.form.get("email_to", "").strip()
         smtp_server = request.form.get("smtp_server", "").strip()
         smtp_port = request.form.get("smtp_port", "").strip()
-        cert_password = request.form.get("certificate_password", "").strip()
         smtp_username = request.form.get("smtp_username", "").strip()
         smtp_password = request.form.get("smtp_password", "").strip()
 
@@ -36,7 +36,7 @@ def setup():
             tenant_id, client_id, client_secret, subscription_id, certificate_path,
             resource_group, zone_name, record_set_name, ttl,
             email_from, email_to, smtp_server, smtp_port,
-            cert_password, smtp_username, smtp_password
+            smtp_username, smtp_password
         ]
         if not all(required_fields):
             flash("All fields are required.", "danger")
@@ -56,7 +56,7 @@ def setup():
             "email_to": email_to,
             "smtp_server": smtp_server,
             "smtp_port": smtp_port,
-            "certificate_password": cert_password,
+            "certificate_password": "",  # Always blank!
         }
 
         try:

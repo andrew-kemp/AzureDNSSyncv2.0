@@ -1,15 +1,28 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <title>AzureDNSSync2 Dashboard</title>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  </head>
-  <body>
+</head>
+<body>
     <div class="container">
-      <h2>Dashboard</h2>
-      <p>Welcome, {{ session['user'] }}!</p>
-      <a href="{{ url_for('main.settings') }}"><button>Settings</button></a>
-      <a href="{{ url_for('main.logout') }}"><button>Logout</button></a>
+        <h2>Dashboard</h2>
+        <div>
+            <a href="{{ url_for('cert.download_cert') }}" class="btn btn-primary">Download Certificate</a>
+            <a href="{{ url_for('config.view_config') }}" class="btn btn-secondary">View Config</a>
+            <a href="{{ url_for('dashboard.run_now') }}" class="btn btn-success">Run Now</a>
+        </div>
+        <hr>
+        <h4>Status</h4>
+        <p>Last Run: {{ status.last_run }}</p>
+        <p>Result: {{ status.result }}</p>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, msg in messages %}
+                <div class="alert alert-{{ category }}">{{ msg }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
     </div>
-  </body>
+</body>
 </html>

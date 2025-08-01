@@ -12,6 +12,7 @@ USER_SERVICE="$USER"
 CERT_DIR="/etc/azurednssync2/certs"
 CERT_PATH="$CERT_DIR/cert.pem"
 KEY_PATH="$CERT_DIR/key.pem"
+MFA_FILE="$INSTALL_DIR/user_mfa.json"
 
 echo "Updating system packages..."
 sudo apt-get update
@@ -97,6 +98,17 @@ fi
 
 echo "Cleaning up temporary directory..."
 rm -rf "$TMP_DIR"
+
+# --- Create persistent MFA data file if it doesn't exist ---
+if [ ! -f "$MFA_FILE" ]; then
+    echo "{}" | sudo tee "$MFA_FILE" > /dev/null
+fi
+
+# --- Set permissions for MFA data file and directory ---
+sudo chown root:$GROUP "$MFA_FILE"
+sudo chmod 660 "$MFA_FILE"
+sudo chown root:$GROUP "$INSTALL_DIR"
+sudo chmod 770 "$INSTALL_DIR"
 
 echo "Creating systemd service file..."
 

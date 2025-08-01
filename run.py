@@ -1,16 +1,15 @@
 import os
 from flask import Flask, redirect, url_for, request, session
 from app.routes_setup import setup_bp, is_configured
-from app.pam_auth import authenticate  # Assuming you have a PAM auth function
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "change_this_in_production")
 
-# Register setup blueprint (ensure template_folder is set in blueprint itself)
+# Register setup blueprint
 app.register_blueprint(setup_bp)
 
 # Main dashboard blueprint
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, flash
 
 main_bp = Blueprint('main', __name__, template_folder='templates')
 
@@ -29,20 +28,22 @@ def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        if authenticate(username, password):
+        # Replace this with your actual authentication logic
+        if username == "admin" and password == "password":  # Replace with PAM or real check
             session["logged_in"] = True
             session["username"] = username
+            flash("Successfully logged in.", "success")
             return redirect(url_for("main.index"))
         else:
-            error = "Invalid credentials"
-    return render_template("login.html", error=error)
+            flash("Invalid username or password.", "danger")
+    return render_template("login.html")
 
 @app.route("/logout")
 def logout():
     session.clear()
+    flash("Logged out.", "success")
     return redirect(url_for("login"))
 
-# Only allow setup after login and if not configured
 @app.before_request
 def enforce_login_and_setup():
     allowed = {"login", "static"}

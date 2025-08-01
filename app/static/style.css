@@ -2,37 +2,82 @@ body {
     font-family: "Segoe UI", Verdana, Arial, sans-serif;
     background: #f4f8fb;
     color: #222;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
 }
+
 .container {
     margin: 60px auto;
-    max-width: 350px;
+    max-width: 400px;
     padding: 2em;
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 40px rgba(0,0,0,0.08);
 }
+
 h2 {
     text-align: center;
     color: #0a5ed7;
+    margin-bottom: 1.5em;
 }
-input, button {
+
+.form-label {
+    color: #333;
+    font-weight: 500;
+}
+
+input, button, select, textarea {
     width: 100%;
     margin: 10px 0;
     padding: 0.7em;
     border-radius: 6px;
     border: 1px solid #bfc9d1;
     font-size: 1em;
+    box-sizing: border-box;
 }
+
+input[type="password"] {
+    font-family: inherit;
+}
+
 button {
     background: #0a5ed7;
     color: white;
     border: none;
     cursor: pointer;
     font-weight: 600;
+    margin-top: 1em;
+    transition: background 0.2s;
 }
+
 button:hover {
     background: #084cbb;
 }
+
+.alert {
+    padding: 0.75em 1em;
+    border-radius: 6px;
+    margin-bottom: 1em;
+    font-size: 1em;
+}
+.alert-danger {
+    background: #fdecea;
+    color: #d32f2f;
+}
+.alert-success {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+.alert-warning {
+    background: #fff8e1;
+    color: #fbc02d;
+}
+.alert-info {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
 ul {
     color: #e53935;
     list-style: none;
@@ -40,11 +85,13 @@ ul {
     margin-top: 10px;
     text-align: center;
 }
-.danger {
-    color: #e53935;
-    font-weight: bold;
+
+a {
+    color: #0a5ed7;
+    text-decoration: none;
+    transition: color 0.2s;
 }
-.success {
-    color: #43a047;
-    font-weight: bold;
+a:hover {
+    color: #084cbb;
+    text-decoration: underline;
 }

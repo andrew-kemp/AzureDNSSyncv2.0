@@ -1,14 +1,49 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <title>AzureDNSSync2 Dashboard</title>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AzureDNS Sync Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  </head>
-  <body>
+</head>
+<body>
     <div class="container">
-      <h2>Welcome, {{ session.get('username', '') }}</h2>
-      <p>AzureDNSSync2 is configured and running.</p>
-      <a href="{{ url_for('logout') }}">Logout</a>
+        <h1>AzureDNS Sync Dashboard</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, msg in messages %}
+                <div class="alert alert-{{ category }}">{{ msg }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <div class="dashboard-buttons">
+            <a href="{{ url_for('view_config') }}" class="btn btn-info">View Config</a>
+            <a href="{{ url_for('download_cert') }}" class="btn btn-primary">Download Certificate</a>
+            <a href="{{ url_for('setup.setup') }}" class="btn btn-warning">Update Config</a>
+            <a href="{{ url_for('service_status') }}" class="btn btn-secondary">View Service Status</a>
+            <form action="{{ url_for('run_sync_now') }}" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-success">Run Sync Now</button>
+            </form>
+            <form action="{{ url_for('restart_service') }}" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-danger">Restart Service</button>
+            </form>
+        </div>
+        <hr>
+        <h2>Service Status</h2>
+        <div id="service-status">
+            {% if service_status %}
+                <pre>{{ service_status }}</pre>
+            {% else %}
+                <p>Click 'View Service Status' to refresh.</p>
+            {% endif %}
+        </div>
+        <hr>
+        <h2>Last Sync Log</h2>
+        <div id="sync-log">
+            {% if sync_log %}
+                <pre>{{ sync_log }}</pre>
+            {% else %}
+                <p>No log found.</p>
+            {% endif %}
+        </div>
     </div>
-  </body>
+</body>
 </html>

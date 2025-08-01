@@ -1,1 +1,19 @@
-
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Config</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Update Configuration</h2>
+        <form method="post">
+        {% for key, value in config.items() %}
+            <label for="{{ key }}">{{ key }}:</label>
+            <input type="text" name="{{ key }}" id="{{ key }}" value="{{ value }}">
+        {% endfor %}
+            <button type="submit" class="btn btn-success">Save</button>
+        </form>
+    </div>
+</body>
+</html>

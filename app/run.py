@@ -6,7 +6,6 @@ from flask import Flask, redirect, url_for, request, session, flash, render_temp
 from pam import pam
 from routes_setup import setup_bp, is_configured
 
-# In-memory store for MFA secrets & status (replace with DB for production)
 USER_MFA = {}
 
 app = Flask(__name__)
@@ -29,7 +28,6 @@ def login():
             session['username'] = username
             session['logged_in'] = True
             session['mfa_authenticated'] = False
-            # Enforce MFA setup/verification
             if username not in USER_MFA or not USER_MFA[username].get("enabled"):
                 flash("Please set up MFA.", "warning")
                 return redirect(url_for("mfa_setup"))
@@ -50,17 +48,13 @@ def mfa_setup():
     username = session.get("username")
     if not username:
         return redirect(url_for("login"))
-
-    # Create secret if not present
     if username not in USER_MFA:
         secret = pyotp.random_base32()
         USER_MFA[username] = {"secret": secret, "enabled": False}
     else:
         secret = USER_MFA[username]["secret"]
-
     totp = pyotp.TOTP(secret)
     provisioning_uri = totp.provisioning_uri(name=username, issuer_name="AzureDNSSync2")
-
     if request.method == "POST":
         code = request.form.get("mfa_code")
         if totp.verify(code):
@@ -70,14 +64,18 @@ def mfa_setup():
             return redirect(url_for("setup.setup") if not is_configured() else url_for("index"))
         else:
             flash("Invalid MFA code.", "danger")
-
     return render_template("mfa_setup.html", secret=secret)
 
 @app.route('/mfa_qr')
 def mfa_qr():
     username = session.get("username")
     if not username or username not in USER_MFA:
-        return "", 404
+        # Return a blank image if not logged in or no secret
+        buf = io.BytesIO()
+        qr = qrcode.make("Invalid")
+        qr.save(buf, format='PNG')
+        buf.seek(0)
+        return send_file(buf, mimetype='image/png')
     totp = pyotp.TOTP(USER_MFA[username]["secret"])
     provisioning_uri = totp.provisioning_uri(name=username, issuer_name="AzureDNSSync2")
     qr = qrcode.make(provisioning_uri)
@@ -108,31 +106,20 @@ def enforce_user_flow():
         "login", "static", "mfa_setup", "verify_mfa", "mfa_qr", "favicon"
     }
     endpoint = (request.endpoint or "").split('.')[-1]
-
-    # Always allow static files, favicon, and login/MFA endpoints
     if endpoint in allowed_endpoints:
         return
-
-    # Step 1: If not logged in, redirect to login
     if not session.get("logged_in"):
         return redirect(url_for("login"))
-
     username = session.get("username")
     mfa_enabled = username in USER_MFA and USER_MFA[username].get("enabled")
-
-    # Step 2: After login, if MFA not setup, go to setup
     if session.get("logged_in") and not mfa_enabled:
         if endpoint != "mfa_setup":
             return redirect(url_for("mfa_setup"))
         return
-
-    # Step 3: If MFA enabled but not authenticated for session, verify MFA
     if session.get("logged_in") and mfa_enabled and not session.get("mfa_authenticated"):
         if endpoint != "verify_mfa":
             return redirect(url_for("verify_mfa"))
         return
-
-    # Step 4: After login and MFA, if not configured, go to setup
     if session.get("logged_in") and session.get("mfa_authenticated") and not is_configured():
         if endpoint != "setup":
             return redirect(url_for("setup.setup"))

@@ -3,7 +3,6 @@ body {
     background: #f4f8fb;
     color: #222;
 }
-
 .container {
     margin: 60px auto;
     max-width: 350px;
@@ -12,12 +11,10 @@ body {
     border-radius: 12px;
     box-shadow: 0 4px 40px rgba(0,0,0,0.08);
 }
-
 h2 {
     text-align: center;
     color: #0a5ed7;
 }
-
 input, button {
     width: 100%;
     margin: 10px 0;
@@ -26,7 +23,6 @@ input, button {
     border: 1px solid #bfc9d1;
     font-size: 1em;
 }
-
 button {
     background: #0a5ed7;
     color: white;
@@ -34,11 +30,9 @@ button {
     cursor: pointer;
     font-weight: 600;
 }
-
 button:hover {
     background: #084cbb;
 }
-
 ul {
     color: #e53935;
     list-style: none;
@@ -46,8 +40,6 @@ ul {
     margin-top: 10px;
     text-align: center;
 }
-
-/* Flash message categories for non-Bootstrap login page */
 .danger {
     color: #e53935;
     font-weight: bold;

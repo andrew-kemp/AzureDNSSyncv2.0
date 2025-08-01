@@ -15,14 +15,13 @@
         {% endif %}
         {% endwith %}
         <div class="dashboard-buttons">
-            <a href="{{ url_for('view_config') }}" class="btn btn-info">View Config</a>
-            <a href="{{ url_for('download_cert') }}" class="btn btn-primary">Download Certificate</a>
-            <a href="{{ url_for('setup.setup') }}" class="btn btn-warning">Update Config</a>
-            <a href="{{ url_for('service_status') }}" class="btn btn-secondary">View Service Status</a>
-            <form action="{{ url_for('run_sync_now') }}" method="post" style="display:inline;">
+            <a href="{{ url_for('dashboard.view_config') }}" class="btn btn-info">View Config</a>
+            <a href="{{ url_for('dashboard.download_cert') }}" class="btn btn-primary">Download Certificate</a>
+            <a href="{{ url_for('dashboard.service_status') }}" class="btn btn-secondary">View Service Status</a>
+            <form action="{{ url_for('dashboard.run_sync_now') }}" method="post" style="display:inline;">
                 <button type="submit" class="btn btn-success">Run Sync Now</button>
             </form>
-            <form action="{{ url_for('restart_service') }}" method="post" style="display:inline;">
+            <form action="{{ url_for('dashboard.restart_service') }}" method="post" style="display:inline;">
                 <button type="submit" class="btn btn-danger">Restart Service</button>
             </form>
         </div>

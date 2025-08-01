@@ -6,9 +6,10 @@
 </head>
 <body>
     <div class="container">
-        <h2>Current Configuration</h2>
-        <pre>{{ config }}</pre>
-        <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Back to Dashboard</a>
+        <h1>Config File</h1>
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+        <hr>
+        <pre>{{ config_content|default("No config file found.") }}</pre>
     </div>
 </body>
 </html>

@@ -23,15 +23,17 @@
                    value="{{ request.form.subscription_id or '' }}"
                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
 
+            <label for="client_secret">Client Secret:</label>
+            <input type="password" name="client_secret" id="client_secret"
+                   value="{{ request.form.client_secret or '' }}"
+                   placeholder="Client Secret" required>
+
             <label for="certificate_path">Certificate Path (.pem):</label>
             <input type="text" name="certificate_path" id="certificate_path"
                    value="{{ request.form.certificate_path or '/etc/azurednssync2/certs/cert.pem' }}"
                    placeholder="/etc/azurednssync2/certs/cert.pem" required>
 
-            <label for="certificate_password">Certificate Password:</label>
-            <input type="password" name="certificate_password" id="certificate_password"
-                   value="{{ request.form.certificate_password or '' }}"
-                   placeholder="(leave blank if not required)">
+            <!-- Certificate Password removed as requested -->
 
             <label for="resource_group">Resource Group:</label>
             <input type="text" name="resource_group" id="resource_group"
@@ -50,22 +52,22 @@
 
             <label for="ttl">TTL:</label>
             <input type="number" name="ttl" id="ttl"
-                   value="{{ request.form.ttl or '300' }}"
-                   placeholder="300" required>
+                   value="{{ request.form.ttl or '3600' }}"
+                   placeholder="3600" required>
 
-            <label for="email_from">Email From:</label>
+            <label for="email_from">Notification Email From:</label>
             <input type="email" name="email_from" id="email_from"
-                   value="{{ request.form.email_from or 'admin@example.com' }}"
+                   value="{{ request.form.email_from or '' }}"
                    placeholder="admin@example.com" required>
 
-            <label for="email_to">Email To:</label>
+            <label for="email_to">Notification Email To:</label>
             <input type="email" name="email_to" id="email_to"
-                   value="{{ request.form.email_to or 'user@example.com' }}"
+                   value="{{ request.form.email_to or '' }}"
                    placeholder="user@example.com" required>
 
             <label for="smtp_server">SMTP Server:</label>
             <input type="text" name="smtp_server" id="smtp_server"
-                   value="{{ request.form.smtp_server or 'smtp.example.com' }}"
+                   value="{{ request.form.smtp_server or '' }}"
                    placeholder="smtp.example.com" required>
 
             <label for="smtp_port">SMTP Port:</label>
@@ -76,14 +78,14 @@
             <label for="smtp_username">SMTP Username:</label>
             <input type="text" name="smtp_username" id="smtp_username"
                    value="{{ request.form.smtp_username or '' }}"
-                   placeholder="smtp-user" required>
+                   placeholder="your@email.com" required>
 
             <label for="smtp_password">SMTP Password:</label>
             <input type="password" name="smtp_password" id="smtp_password"
                    value="{{ request.form.smtp_password or '' }}"
-                   placeholder="smtp-password" required>
+                   placeholder="SMTP Password" required>
 
-            <button type="submit">Save &amp; Continue</button>
+            <button type="submit">Save</button>
         </form>
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -92,11 +94,6 @@
             {% endfor %}
         {% endif %}
         {% endwith %}
-        {% if config_saved %}
-        <div style="margin-top: 2em;">
-            <a href="{{ url_for('download_cert') }}" class="button">Download Certificate</a>
-        </div>
-        {% endif %}
     </div>
 </body>
 </html>

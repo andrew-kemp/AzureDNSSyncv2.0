@@ -6,8 +6,6 @@ REPO_URL="https://github.com/andrew-kemp/AzureDNSSyncv2.0.git"
 TMP_DIR=~/azurednssync_tmp
 INSTALL_DIR="/opt/azurednssync2"
 APP_DIR="$INSTALL_DIR/app"
-PYTHON_VERSION=$(python3 --version | awk '{print $2}' | cut -d. -f1,2)
-VENV_PKG="python${PYTHON_VERSION}-venv"
 SERVICE_NAME="azurednssync2"
 GROUP="azurednssync"
 USER_SERVICE="$USER"
@@ -17,6 +15,10 @@ KEY_PATH="$CERT_DIR/key.pem"
 
 echo "Updating system packages..."
 sudo apt-get update
+
+# Determine Python version for venv package
+PYTHON_VERSION=$(python3 --version | awk '{print $2}' | cut -d. -f1,2)
+VENV_PKG="python${PYTHON_VERSION}-venv"
 
 echo "Installing required system packages..."
 sudo apt-get install -y python3 python3-pip "$VENV_PKG" git libpam0g-dev gcc libssl-dev libffi-dev openssl
@@ -37,11 +39,11 @@ sudo mkdir -p /var/log/$SERVICE_NAME
 sudo mkdir -p /var/lib/$SERVICE_NAME
 
 echo "Copying application files to $APP_DIR..."
-sudo rsync -a "$TMP_DIR/app/" $APP_DIR/
-sudo cp "$TMP_DIR/run.py" $APP_DIR/run.py
-sudo cp "$TMP_DIR/requirements.txt" $INSTALL_DIR/requirements.txt
-[ -d "$TMP_DIR/docs" ] && sudo rsync -a "$TMP_DIR/docs/" $INSTALL_DIR/docs/
-[ -d "$TMP_DIR/scripts" ] && sudo rsync -a "$TMP_DIR/scripts/" $INSTALL_DIR/scripts/
+sudo rsync -a "$TMP_DIR/app/" "$APP_DIR/"
+sudo cp "$TMP_DIR/app/run.py" "$APP_DIR/run.py"
+sudo cp "$TMP_DIR/requirements.txt" "$INSTALL_DIR/requirements.txt"
+[ -d "$TMP_DIR/docs" ] && sudo rsync -a "$TMP_DIR/docs/" "$INSTALL_DIR/docs/"
+[ -d "$TMP_DIR/scripts" ] && sudo rsync -a "$TMP_DIR/scripts/" "$INSTALL_DIR/scripts/"
 
 echo "Setting permissions for system-owned directories..."
 sudo chown -R root:root /etc/azurednssync2 /var/log/$SERVICE_NAME /var/lib/$SERVICE_NAME
@@ -109,7 +111,7 @@ After=network.target
 User=$USER_SERVICE
 Group=$GROUP
 WorkingDirectory=$APP_DIR
-Environment=\"PATH=$INSTALL_DIR/venv/bin\"
+Environment="PATH=$INSTALL_DIR/venv/bin"
 ExecStart=$INSTALL_DIR/venv/bin/python3 run.py
 Restart=always
 

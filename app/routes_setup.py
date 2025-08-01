@@ -17,10 +17,8 @@ def setup():
     if request.method == "POST":
         tenant_id = request.form.get("tenant_id", "").strip()
         client_id = request.form.get("client_id", "").strip()
-        client_secret = request.form.get("client_secret", "").strip()
         subscription_id = request.form.get("subscription_id", "").strip()
         certificate_path = request.form.get("certificate_path", "").strip()
-        # cert_password = request.form.get("certificate_password", "").strip()  # REMOVED
         resource_group = request.form.get("resource_group", "").strip()
         zone_name = request.form.get("zone_name", "").strip()
         record_set_name = request.form.get("record_set_name", "").strip()
@@ -33,7 +31,7 @@ def setup():
         smtp_password = request.form.get("smtp_password", "").strip()
 
         required_fields = [
-            tenant_id, client_id, client_secret, subscription_id, certificate_path,
+            tenant_id, client_id, subscription_id, certificate_path,
             resource_group, zone_name, record_set_name, ttl,
             email_from, email_to, smtp_server, smtp_port,
             smtp_username, smtp_password
@@ -45,7 +43,6 @@ def setup():
         config = {
             "tenant_id": tenant_id,
             "client_id": client_id,
-            "client_secret": client_secret,
             "subscription_id": subscription_id,
             "certificate_path": certificate_path,
             "resource_group": resource_group,

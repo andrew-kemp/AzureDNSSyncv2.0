@@ -11,3 +11,4 @@ six
 PyYAML
 qrcode
 qrcode[pil]
+pillow

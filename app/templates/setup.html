@@ -17,68 +17,52 @@
     {% endif %}
   {% endwith %}
   <form method="post" class="mt-3">
-    <div class="mb-3">
-      <label for="tenant_id" class="form-label">Azure Tenant ID</label>
+    <div class="mb-3"><label for="tenant_id" class="form-label">Azure Tenant ID</label>
       <input type="text" class="form-control" id="tenant_id" name="tenant_id" required>
     </div>
-    <div class="mb-3">
-      <label for="client_id" class="form-label">Azure Client ID (Application ID)</label>
+    <div class="mb-3"><label for="client_id" class="form-label">Azure Client ID (Application ID)</label>
       <input type="text" class="form-control" id="client_id" name="client_id" required>
     </div>
-    <div class="mb-3">
-      <label for="client_secret" class="form-label">Azure Client Secret</label>
+    <div class="mb-3"><label for="client_secret" class="form-label">Azure Client Secret</label>
       <input type="password" class="form-control" id="client_secret" name="client_secret" required>
     </div>
-    <div class="mb-3">
-      <label for="subscription_id" class="form-label">Azure Subscription ID</label>
+    <div class="mb-3"><label for="subscription_id" class="form-label">Azure Subscription ID</label>
       <input type="text" class="form-control" id="subscription_id" name="subscription_id" required>
     </div>
-    <div class="mb-3">
-      <label for="certificate_path" class="form-label">Certificate Path</label>
+    <div class="mb-3"><label for="certificate_path" class="form-label">Certificate Path</label>
       <input type="text" class="form-control" id="certificate_path" name="certificate_path" required>
     </div>
-    <div class="mb-3">
-      <label for="certificate_password" class="form-label">Certificate Password</label>
+    <div class="mb-3"><label for="certificate_password" class="form-label">Certificate Password</label>
       <input type="password" class="form-control" id="certificate_password" name="certificate_password" required>
     </div>
-    <div class="mb-3">
-      <label for="resource_group" class="form-label">Azure Resource Group</label>
+    <div class="mb-3"><label for="resource_group" class="form-label">Azure Resource Group</label>
       <input type="text" class="form-control" id="resource_group" name="resource_group" required>
     </div>
-    <div class="mb-3">
-      <label for="zone_name" class="form-label">DNS Zone Name</label>
+    <div class="mb-3"><label for="zone_name" class="form-label">DNS Zone Name</label>
       <input type="text" class="form-control" id="zone_name" name="zone_name" required>
     </div>
-    <div class="mb-3">
-      <label for="record_set_name" class="form-label">Record Set Name</label>
+    <div class="mb-3"><label for="record_set_name" class="form-label">Record Set Name</label>
       <input type="text" class="form-control" id="record_set_name" name="record_set_name" required>
     </div>
-    <div class="mb-3">
-      <label for="ttl" class="form-label">TTL</label>
+    <div class="mb-3"><label for="ttl" class="form-label">TTL</label>
       <input type="number" class="form-control" id="ttl" name="ttl" required>
     </div>
-    <div class="mb-3">
-      <label for="email_from" class="form-label">Email From Address</label>
+    <div class="mb-3"><label for="email_from" class="form-label">Email From Address</label>
       <input type="email" class="form-control" id="email_from" name="email_from" required>
     </div>
-    <div class="mb-3">
-      <label for="email_to" class="form-label">Email To Address</label>
+    <div class="mb-3"><label for="email_to" class="form-label">Email To Address</label>
       <input type="email" class="form-control" id="email_to" name="email_to" required>
     </div>
-    <div class="mb-3">
-      <label for="smtp_server" class="form-label">SMTP Server</label>
+    <div class="mb-3"><label for="smtp_server" class="form-label">SMTP Server</label>
       <input type="text" class="form-control" id="smtp_server" name="smtp_server" required>
     </div>
-    <div class="mb-3">
-      <label for="smtp_port" class="form-label">SMTP Port</label>
+    <div class="mb-3"><label for="smtp_port" class="form-label">SMTP Port</label>
       <input type="number" class="form-control" id="smtp_port" name="smtp_port" required>
     </div>
-    <div class="mb-3">
-      <label for="smtp_username" class="form-label">SMTP Username</label>
+    <div class="mb-3"><label for="smtp_username" class="form-label">SMTP Username</label>
       <input type="text" class="form-control" id="smtp_username" name="smtp_username" required>
     </div>
-    <div class="mb-3">
-      <label for="smtp_password" class="form-label">SMTP Password</label>
+    <div class="mb-3"><label for="smtp_password" class="form-label">SMTP Password</label>
       <input type="password" class="form-control" id="smtp_password" name="smtp_password" required>
     </div>
     <button type="submit" class="btn btn-primary">Save Configuration</button>

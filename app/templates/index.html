@@ -17,12 +17,12 @@
         <div class="dashboard-buttons">
             <a href="{{ url_for('dashboard.view_config') }}" class="btn btn-info">View Config</a>
             <a href="{{ url_for('dashboard.download_cert') }}" class="btn btn-primary">Download Certificate</a>
-            <a href="{{ url_for('dashboard.service_status') }}" class="btn btn-secondary">View Service Status</a>
-            <form action="{{ url_for('dashboard.run_sync_now') }}" method="post" style="display:inline;">
-                <button type="submit" class="btn btn-success">Run Sync Now</button>
+            <a href="{{ url_for('dashboard.view_service_status') }}" class="btn btn-secondary">View Service Status</a>
+            <form action="{{ url_for('dashboard.dashboard') }}" method="post" style="display:inline;">
+                <button type="submit" name="run_sync" class="btn btn-success">Run Sync Now</button>
             </form>
-            <form action="{{ url_for('dashboard.restart_service') }}" method="post" style="display:inline;">
-                <button type="submit" class="btn btn-danger">Restart Service</button>
+            <form action="{{ url_for('dashboard.dashboard') }}" method="post" style="display:inline;">
+                <button type="submit" name="restart_service" class="btn btn-danger">Restart Service</button>
             </form>
         </div>
         <hr>
@@ -37,8 +37,8 @@
         <hr>
         <h2>Last Sync Log</h2>
         <div id="sync-log">
-            {% if sync_log %}
-                <pre>{{ sync_log }}</pre>
+            {% if last_sync_log %}
+                <pre>{{ last_sync_log }}</pre>
             {% else %}
                 <p>No log found.</p>
             {% endif %}

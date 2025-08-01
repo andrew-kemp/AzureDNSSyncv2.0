@@ -28,13 +28,12 @@ def login():
         if pam().authenticate(username, password):
             session['username'] = username
             session['logged_in'] = True
+            session['mfa_authenticated'] = False
             # Enforce MFA setup/verification
             if username not in USER_MFA or not USER_MFA[username].get("enabled"):
-                session['mfa_authenticated'] = False
                 flash("Please set up MFA.", "warning")
                 return redirect(url_for("mfa_setup"))
             else:
-                session['mfa_authenticated'] = False
                 return redirect(url_for("verify_mfa"))
         else:
             flash("Invalid username or password.", "danger")
@@ -62,19 +61,13 @@ def mfa_setup():
     totp = pyotp.TOTP(secret)
     provisioning_uri = totp.provisioning_uri(name=username, issuer_name="AzureDNSSync2")
 
-    # Generate QR code image
-    qr = qrcode.make(provisioning_uri)
-    buf = io.BytesIO()
-    qr.save(buf, format='PNG')
-    buf.seek(0)
-
     if request.method == "POST":
         code = request.form.get("mfa_code")
         if totp.verify(code):
             USER_MFA[username]["enabled"] = True
             session['mfa_authenticated'] = True
             flash("MFA setup complete!", "success")
-            return redirect(url_for("index"))
+            return redirect(url_for("setup.setup") if not is_configured() else url_for("index"))
         else:
             flash("Invalid MFA code.", "danger")
 
@@ -104,24 +97,46 @@ def verify_mfa():
         if totp.verify(code):
             session['mfa_authenticated'] = True
             flash("MFA authenticated!", "success")
-            return redirect(url_for("index"))
+            return redirect(url_for("setup.setup") if not is_configured() else url_for("index"))
         else:
             flash("Invalid MFA code.", "danger")
     return render_template("verify_mfa.html")
 
 @app.before_request
-def enforce_login_and_setup():
-    allowed_endpoints = {"login", "setup", "static", "mfa_setup", "verify_mfa", "mfa_qr", "favicon"}
+def enforce_user_flow():
+    allowed_endpoints = {
+        "login", "static", "mfa_setup", "verify_mfa", "mfa_qr", "favicon"
+    }
     endpoint = (request.endpoint or "").split('.')[-1]
-    # Allow access to static files and login/setup related pages
-    if not session.get("logged_in") and endpoint not in allowed_endpoints:
+
+    # Always allow static files, favicon, and login/MFA endpoints
+    if endpoint in allowed_endpoints:
+        return
+
+    # Step 1: If not logged in, redirect to login
+    if not session.get("logged_in"):
         return redirect(url_for("login"))
-    username = session.get('username')
-    if session.get("logged_in"):
-        if not is_configured() and not (request.endpoint or "").startswith("setup."):
-            return redirect(url_for("setup.setup"))
-        if username in USER_MFA and USER_MFA[username].get("enabled") and not session.get("mfa_authenticated") and endpoint not in allowed_endpoints:
+
+    username = session.get("username")
+    mfa_enabled = username in USER_MFA and USER_MFA[username].get("enabled")
+
+    # Step 2: After login, if MFA not setup, go to setup
+    if session.get("logged_in") and not mfa_enabled:
+        if endpoint != "mfa_setup":
+            return redirect(url_for("mfa_setup"))
+        return
+
+    # Step 3: If MFA enabled but not authenticated for session, verify MFA
+    if session.get("logged_in") and mfa_enabled and not session.get("mfa_authenticated"):
+        if endpoint != "verify_mfa":
             return redirect(url_for("verify_mfa"))
+        return
+
+    # Step 4: After login and MFA, if not configured, go to setup
+    if session.get("logged_in") and session.get("mfa_authenticated") and not is_configured():
+        if endpoint != "setup":
+            return redirect(url_for("setup.setup"))
+        return
 
 if __name__ == "__main__":
     app.run(

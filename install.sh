@@ -10,8 +10,10 @@ SERVICE_NAME="azurednssync2"
 GROUP="azurednssync"
 USER_SERVICE="$USER"
 CERT_DIR="/etc/azurednssync2/certs"
-CERT_PATH="$CERT_DIR/cert.pem"
-KEY_PATH="$CERT_DIR/key.pem"
+CERT_NAME="cert"
+CERT_PATH="$CERT_DIR/${CERT_NAME}.crt"
+KEY_PATH="$CERT_DIR/${CERT_NAME}.key"
+COMBINED_PEM="$CERT_DIR/${CERT_NAME}.pem"
 MFA_FILE="$INSTALL_DIR/user_mfa.json"
 
 echo "Updating system packages..."
@@ -52,12 +54,28 @@ sudo chmod 755 /etc/azurednssync2 /var/log/$SERVICE_NAME /var/lib/$SERVICE_NAME
 sudo chmod 750 $CERT_DIR
 
 # --- Create self-signed certificate and key if missing ---
-if [ ! -f "$CERT_PATH" ] || [ ! -f "$KEY_PATH" ]; then
-    echo "No certificate or key found at $CERT_PATH and $KEY_PATH. Generating self-signed certificate and key..."
-    sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-        -keyout "$KEY_PATH" -out "$CERT_PATH" \
-        -subj "/CN=localhost"
+echo "Generating self-signed certificate (if needed)"
+cd "$CERT_DIR"
+if [ ! -f "$KEY_PATH" ] || [ ! -f "$CERT_PATH" ]; then
+    sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+        -keyout "$KEY_PATH" \
+        -out "$CERT_PATH" \
+        -subj "/CN=azurednssync"
+    sudo chmod 600 "$KEY_PATH" "$CERT_PATH"
+else
+    echo "Certificate files already exist: $KEY_PATH, $CERT_PATH"
 fi
+
+# --- Combine key and cert into PEM file ---
+echo "Combining key and cert into PEM"
+sudo cat "$KEY_PATH" "$CERT_PATH" > "$COMBINED_PEM"
+sudo chmod 600 "$COMBINED_PEM"
+
+# --- Show public certificate block for Azure AD registration ---
+echo "Azure App Registration Certificate Block"
+echo "Copy the block below and paste it into your Azure AD App Registration as a public certificate:"
+awk '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/ {print}' "$CERT_PATH"
+echo
 
 # --- Group setup for cert access ---
 if getent group $GROUP >/dev/null; then
@@ -71,8 +89,8 @@ sudo usermod -a -G $GROUP $USER
 
 sudo chown root:$GROUP $CERT_DIR
 sudo chmod 750 $CERT_DIR
-sudo chown root:$GROUP "$CERT_PATH" "$KEY_PATH"
-sudo chmod 640 "$CERT_PATH" "$KEY_PATH"
+sudo chown root:$GROUP "$CERT_PATH" "$KEY_PATH" "$COMBINED_PEM"
+sudo chmod 640 "$CERT_PATH" "$KEY_PATH" "$COMBINED_PEM"
 
 echo "Changing ownership of $INSTALL_DIR to current user for venv setup and file edits..."
 sudo chown -R $USER:$USER $INSTALL_DIR
@@ -104,7 +122,6 @@ if [ ! -f "$MFA_FILE" ]; then
     echo "{}" | sudo tee "$MFA_FILE" > /dev/null
 fi
 
-# --- Set permissions for MFA data file and directory ---
 sudo chown root:$GROUP "$MFA_FILE"
 sudo chmod 660 "$MFA_FILE"
 sudo chown root:$GROUP "$INSTALL_DIR"

@@ -7,14 +7,13 @@ from flask import Flask, redirect, url_for, request, session, flash, render_temp
 from pam import pam
 from routes_setup import setup_bp, is_configured
 from user_mfa import load_mfa_data, save_mfa_data
-from routes_dashboard import dashboard_bp  # <-- Import your dashboard blueprint here
+from routes_dashboard import dashboard_bp  # Import your dashboard blueprint
 
 USER_MFA = load_mfa_data()  # Persistent MFA data
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = secrets.token_hex(32)
 
-# Register your blueprints
 app.register_blueprint(setup_bp)
 app.register_blueprint(dashboard_bp)
 
@@ -107,11 +106,12 @@ def verify_mfa():
 
 @app.route('/download_cert')
 def download_cert():
-    cert_path = '/var/lib/azurednssync2/certs/cert.pem'  # <-- Updated path
+    cert_path = '/var/lib/azurednssync2/certs/cert.pem'
     if not os.path.isfile(cert_path):
         flash("Certificate file not found.", "danger")
         return redirect(url_for("setup.setup"))
-    return send_file(cert_path, as_attachment=True, download_name='cert.pem')
+    # Download as .cer for better compatibility
+    return send_file(cert_path, as_attachment=True, download_name='cert.cer')
 
 @app.before_request
 def enforce_user_flow():
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8443,
         ssl_context=(
-            "/var/lib/azurednssync2/certs/cert.pem",  # <-- Updated path
-            "/var/lib/azurednssync2/certs/cert.key"   # <-- Updated path
+            "/var/lib/azurednssync2/certs/cert.pem",
+            "/var/lib/azurednssync2/certs/cert.key"
         )
     )

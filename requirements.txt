@@ -10,3 +10,4 @@ cffi
 six
 PyYAML
 qrcode
+qrcode[pil]

@@ -1,5 +1,6 @@
 import os
 import io
+import secrets
 import pyotp
 import qrcode
 from flask import Flask, redirect, url_for, request, session, flash, render_template, send_file
@@ -9,7 +10,8 @@ from routes_setup import setup_bp, is_configured
 USER_MFA = {}
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'change_this_in_production')
+# Generate a new secret key each startup to invalidate all sessions after restart
+app.secret_key = secrets.token_hex(32)
 
 app.register_blueprint(setup_bp)
 
@@ -28,6 +30,7 @@ def login():
             session['username'] = username
             session['logged_in'] = True
             session['mfa_authenticated'] = False
+            # MFA setup or verification
             if username not in USER_MFA or not USER_MFA[username].get("enabled"):
                 flash("Please set up MFA.", "warning")
                 return redirect(url_for("mfa_setup"))
@@ -48,6 +51,7 @@ def mfa_setup():
     username = session.get("username")
     if not username:
         return redirect(url_for("login"))
+    # Generate secret if not present
     if username not in USER_MFA:
         secret = pyotp.random_base32()
         USER_MFA[username] = {"secret": secret, "enabled": False}
@@ -103,23 +107,36 @@ def verify_mfa():
 @app.before_request
 def enforce_user_flow():
     allowed_endpoints = {
-        "login", "static", "mfa_setup", "verify_mfa", "mfa_qr", "favicon"
+        "login", "static", "favicon"
     }
     endpoint = (request.endpoint or "").split('.')[-1]
+
+    # Always allow login/static/favicons
     if endpoint in allowed_endpoints:
         return
+
+    # 1. Not logged in? Only allow login/static/favicons
     if not session.get("logged_in"):
-        return redirect(url_for("login"))
+        if endpoint not in allowed_endpoints:
+            return redirect(url_for("login"))
+        return
+
     username = session.get("username")
     mfa_enabled = username in USER_MFA and USER_MFA[username].get("enabled")
+
+    # 2. Logged in but MFA not setup? Only allow MFA setup page and QR code
     if session.get("logged_in") and not mfa_enabled:
-        if endpoint != "mfa_setup":
+        if endpoint not in {"mfa_setup", "mfa_qr", "static", "favicon"}:
             return redirect(url_for("mfa_setup"))
         return
+
+    # 3. MFA enabled but not verified? Only allow verify page
     if session.get("logged_in") and mfa_enabled and not session.get("mfa_authenticated"):
-        if endpoint != "verify_mfa":
+        if endpoint not in {"verify_mfa", "static", "favicon"}:
             return redirect(url_for("verify_mfa"))
         return
+
+    # 4. MFA verified but not configured? Only allow setup page
     if session.get("logged_in") and session.get("mfa_authenticated") and not is_configured():
         if endpoint != "setup":
             return redirect(url_for("setup.setup"))

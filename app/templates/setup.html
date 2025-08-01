@@ -7,6 +7,15 @@
 <body>
     <div class="container">
         <h2>Initial Setup</h2>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, msg in messages %}
+                <div class="alert alert-{{ category }}">{{ msg }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
         <form method="post">
             <label for="tenant_id">Tenant ID:</label>
             <input type="text" name="tenant_id" id="tenant_id"
@@ -27,8 +36,6 @@
             <input type="text" name="certificate_path" id="certificate_path"
                    value="{{ request.form.certificate_path or '/etc/azurednssync2/certs/cert.pem' }}"
                    placeholder="/etc/azurednssync2/certs/cert.pem" required>
-
-            <!-- Certificate Password and Client Secret fields have been removed -->
 
             <label for="resource_group">Resource Group:</label>
             <input type="text" name="resource_group" id="resource_group"
@@ -83,14 +90,11 @@
             <button type="submit">Save</button>
         </form>
         <hr>
-        <a href="{{ url_for('cert.download_cert') }}" class="btn btn-primary">Download Certificate</a>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, msg in messages %}
-                <div class="alert alert-{{ category }}">{{ msg }}</div>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
+        <h3>Certificate Registration</h3>
+        <p>
+          Download the certificate to register with Azure AD. The public certificate block was displayed during installation.
+        </p>
+        <a href="{{ url_for('download_cert') }}" class="btn btn-primary">Download Certificate</a>
     </div>
 </body>
 </html>

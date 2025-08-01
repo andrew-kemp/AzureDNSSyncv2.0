@@ -8,45 +8,80 @@
     <div class="container">
         <h2>Initial Setup</h2>
         <form method="post">
-            <label for="cert_path">Certificate Path:</label>
-            <input type="text" name="cert_path" id="cert_path"
-                   value="{{ request.form.cert_path or '/etc/azurednssync2/certs/cert.pem' }}"
+            <label for="tenant_id">Tenant ID:</label>
+            <input type="text" name="tenant_id" id="tenant_id"
+                   value="{{ request.form.tenant_id or '' }}"
+                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
+
+            <label for="client_id">Client (App) ID:</label>
+            <input type="text" name="client_id" id="client_id"
+                   value="{{ request.form.client_id or '' }}"
+                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
+
+            <label for="subscription_id">Subscription ID:</label>
+            <input type="text" name="subscription_id" id="subscription_id"
+                   value="{{ request.form.subscription_id or '' }}"
+                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
+
+            <label for="certificate_path">Certificate Path (.pem):</label>
+            <input type="text" name="certificate_path" id="certificate_path"
+                   value="{{ request.form.certificate_path or '/etc/azurednssync2/certs/cert.pem' }}"
                    placeholder="/etc/azurednssync2/certs/cert.pem" required>
 
-            <label for="key_path">Key Path:</label>
-            <input type="text" name="key_path" id="key_path"
-                   value="{{ request.form.key_path or '/etc/azurednssync2/certs/key.pem' }}"
-                   placeholder="/etc/azurednssync2/certs/key.pem" required>
-
-            <label for="cert_password">Certificate Password:</label>
-            <input type="password" name="cert_password" id="cert_password"
-                   value="{{ request.form.cert_password or '' }}"
+            <label for="certificate_password">Certificate Password:</label>
+            <input type="password" name="certificate_password" id="certificate_password"
+                   value="{{ request.form.certificate_password or '' }}"
                    placeholder="(leave blank if not required)">
 
-            <label for="admin_email">Admin Email:</label>
-            <input type="email" name="admin_email" id="admin_email"
-                   value="{{ request.form.admin_email or 'admin@example.com' }}"
+            <label for="resource_group">Resource Group:</label>
+            <input type="text" name="resource_group" id="resource_group"
+                   value="{{ request.form.resource_group or '' }}"
+                   placeholder="myResourceGroup" required>
+
+            <label for="zone_name">Zone Name:</label>
+            <input type="text" name="zone_name" id="zone_name"
+                   value="{{ request.form.zone_name or '' }}"
+                   placeholder="example.com" required>
+
+            <label for="record_set_name">Record Set Name:</label>
+            <input type="text" name="record_set_name" id="record_set_name"
+                   value="{{ request.form.record_set_name or '' }}"
+                   placeholder="www" required>
+
+            <label for="ttl">TTL:</label>
+            <input type="number" name="ttl" id="ttl"
+                   value="{{ request.form.ttl or '300' }}"
+                   placeholder="300" required>
+
+            <label for="email_from">Email From:</label>
+            <input type="email" name="email_from" id="email_from"
+                   value="{{ request.form.email_from or 'admin@example.com' }}"
                    placeholder="admin@example.com" required>
 
-            <label for="dns_provider">DNS Provider:</label>
-            <input type="text" name="dns_provider" id="dns_provider"
-                   value="{{ request.form.dns_provider or 'Azure' }}"
-                   placeholder="Azure" required>
+            <label for="email_to">Email To:</label>
+            <input type="email" name="email_to" id="email_to"
+                   value="{{ request.form.email_to or 'user@example.com' }}"
+                   placeholder="user@example.com" required>
 
-            <label for="api_key">API Key:</label>
-            <input type="text" name="api_key" id="api_key"
-                   value="{{ request.form.api_key or '' }}"
-                   placeholder="Enter your API key">
+            <label for="smtp_server">SMTP Server:</label>
+            <input type="text" name="smtp_server" id="smtp_server"
+                   value="{{ request.form.smtp_server or 'smtp.example.com' }}"
+                   placeholder="smtp.example.com" required>
 
-            <label for="domain_name">Domain Name:</label>
-            <input type="text" name="domain_name" id="domain_name"
-                   value="{{ request.form.domain_name or 'example.com' }}"
-                   placeholder="example.com">
+            <label for="smtp_port">SMTP Port:</label>
+            <input type="number" name="smtp_port" id="smtp_port"
+                   value="{{ request.form.smtp_port or '587' }}"
+                   placeholder="587" required>
 
-            <label for="sync_interval">Sync Interval (minutes):</label>
-            <input type="number" name="sync_interval" id="sync_interval"
-                   value="{{ request.form.sync_interval or '60' }}"
-                   placeholder="60">
+            <label for="smtp_username">SMTP Username:</label>
+            <input type="text" name="smtp_username" id="smtp_username"
+                   value="{{ request.form.smtp_username or '' }}"
+                   placeholder="smtp-user">
+
+            <label for="smtp_password">SMTP Password:</label>
+            <input type="password" name="smtp_password" id="smtp_password"
+                   value="{{ request.form.smtp_password or '' }}"
+                   placeholder="smtp-password">
 
             <button type="submit">Save &amp; Continue</button>
         </form>

@@ -9,12 +9,13 @@ APP_DIR="$INSTALL_DIR/app"
 SERVICE_NAME="azurednssync2"
 GROUP="azurednssync"
 USER_SERVICE="$USER"
-CERT_DIR="/etc/azurednssync2/certs"
+DATA_DIR="/var/lib/$SERVICE_NAME"
+CERT_DIR="$DATA_DIR/certs"
 CERT_NAME="cert"
-CERT_PATH="$CERT_DIR/${CERT_NAME}.crt"
+CERT_PATH="$CERT_DIR/${CERT_NAME}.pem"
 KEY_PATH="$CERT_DIR/${CERT_NAME}.key"
-COMBINED_PEM="$CERT_DIR/${CERT_NAME}.pem"
-MFA_FILE="$INSTALL_DIR/user_mfa.json"
+MFA_FILE="$DATA_DIR/user_mfa.json"
+LOG_DIR="/var/log/$SERVICE_NAME"
 
 echo "Updating system packages..."
 sudo apt-get update
@@ -38,8 +39,7 @@ sudo mkdir -p $APP_DIR/tests
 sudo mkdir -p $INSTALL_DIR/docs
 sudo mkdir -p $INSTALL_DIR/scripts
 sudo mkdir -p $CERT_DIR
-sudo mkdir -p /var/log/$SERVICE_NAME
-sudo mkdir -p /var/lib/$SERVICE_NAME
+sudo mkdir -p $LOG_DIR
 
 echo "Copying application files to $APP_DIR..."
 sudo rsync -a "$TMP_DIR/app/" "$APP_DIR/"
@@ -49,8 +49,8 @@ sudo cp "$TMP_DIR/requirements.txt" "$INSTALL_DIR/requirements.txt"
 [ -d "$TMP_DIR/scripts" ] && sudo rsync -a "$TMP_DIR/scripts/" "$INSTALL_DIR/scripts/"
 
 echo "Setting permissions for system-owned directories..."
-sudo chown -R root:root /etc/azurednssync2 /var/log/$SERVICE_NAME /var/lib/$SERVICE_NAME
-sudo chmod 755 /etc/azurednssync2 /var/log/$SERVICE_NAME /var/lib/$SERVICE_NAME
+sudo chown -R root:$GROUP $DATA_DIR $LOG_DIR
+sudo chmod 755 $DATA_DIR $LOG_DIR
 sudo chmod 750 $CERT_DIR
 
 # --- Create self-signed certificate and key if missing ---
@@ -60,20 +60,14 @@ if [ ! -f "$KEY_PATH" ] || [ ! -f "$CERT_PATH" ]; then
     sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
         -keyout "$KEY_PATH" \
         -out "$CERT_PATH" \
-        -subj "/CN=azurednssync"
+        -subj "/CN=azurednssync2"
     sudo chmod 600 "$KEY_PATH" "$CERT_PATH"
 else
     echo "Certificate files already exist: $KEY_PATH, $CERT_PATH"
 fi
 
-# --- Combine key and cert into PEM file ---
-echo "Combining key and cert into PEM"
-sudo cat "$KEY_PATH" "$CERT_PATH" > "$COMBINED_PEM"
-sudo chmod 600 "$COMBINED_PEM"
-
 # --- Show public certificate block for Azure AD registration ---
 echo "Azure App Registration Certificate Block"
-echo "Copy the block below and paste it into your Azure AD App Registration as a public certificate:"
 awk '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/ {print}' "$CERT_PATH"
 echo
 
@@ -89,8 +83,8 @@ sudo usermod -a -G $GROUP $USER
 
 sudo chown root:$GROUP $CERT_DIR
 sudo chmod 750 $CERT_DIR
-sudo chown root:$GROUP "$CERT_PATH" "$KEY_PATH" "$COMBINED_PEM"
-sudo chmod 640 "$CERT_PATH" "$KEY_PATH" "$COMBINED_PEM"
+sudo chown root:$GROUP "$CERT_PATH" "$KEY_PATH"
+sudo chmod 640 "$CERT_PATH" "$KEY_PATH"
 
 echo "Changing ownership of $INSTALL_DIR to current user for venv setup and file edits..."
 sudo chown -R $USER:$USER $INSTALL_DIR
@@ -124,8 +118,8 @@ fi
 
 sudo chown root:$GROUP "$MFA_FILE"
 sudo chmod 660 "$MFA_FILE"
-sudo chown root:$GROUP "$INSTALL_DIR"
-sudo chmod 770 "$INSTALL_DIR"
+sudo chown root:$GROUP "$DATA_DIR"
+sudo chmod 770 "$DATA_DIR"
 
 echo "Creating systemd service file..."
 

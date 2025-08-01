@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MFA Setup</title>
+    <title>Multi-Factor Authentication Setup</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -19,11 +19,11 @@
             <button type="submit">Verify</button>
         </form>
         {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
+        {% if messages %}
             {% for category, msg in messages %}
-              <div class="alert alert-{{ category }}">{{ msg }}</div>
+                <div class="alert alert-{{ category }}">{{ msg }}</div>
             {% endfor %}
-          {% endif %}
+        {% endif %}
         {% endwith %}
     </div>
 </body>

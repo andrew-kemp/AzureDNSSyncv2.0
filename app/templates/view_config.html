@@ -7,15 +7,8 @@
 <body>
     <div class="container">
         <h2>Current Configuration</h2>
-        <table>
-        {% for key, value in config.items() %}
-            <tr>
-                <td><b>{{ key }}</b></td>
-                <td>{{ value }}</td>
-            </tr>
-        {% endfor %}
-        </table>
-        <a href="{{ url_for('config.update_config') }}" class="btn btn-warning">Update Config</a>
+        <pre>{{ config }}</pre>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Back to Dashboard</a>
     </div>
 </body>
 </html>

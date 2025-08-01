@@ -76,12 +76,12 @@
             <label for="smtp_username">SMTP Username:</label>
             <input type="text" name="smtp_username" id="smtp_username"
                    value="{{ request.form.smtp_username or '' }}"
-                   placeholder="smtp-user">
+                   placeholder="smtp-user" required>
 
             <label for="smtp_password">SMTP Password:</label>
             <input type="password" name="smtp_password" id="smtp_password"
                    value="{{ request.form.smtp_password or '' }}"
-                   placeholder="smtp-password">
+                   placeholder="smtp-password" required>
 
             <button type="submit">Save &amp; Continue</button>
         </form>
@@ -92,6 +92,11 @@
             {% endfor %}
         {% endif %}
         {% endwith %}
+        {% if config_saved %}
+        <div style="margin-top: 2em;">
+            <a href="{{ url_for('download_cert') }}" class="button">Download Certificate</a>
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>

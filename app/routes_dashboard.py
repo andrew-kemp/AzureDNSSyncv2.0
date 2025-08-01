@@ -1,110 +1,102 @@
 import os
 import subprocess
-from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
+from flask import Blueprint, render_template, send_file, flash, redirect, url_for
 
-dashboard_bp = Blueprint('dashboard', __name__)
+dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
-# Updated paths for new install layout
-CONFIG_PATH = "/var/lib/azurednssync2/config.yaml"
-CERT_PATH = "/var/lib/azurednssync2/certs/cert.pem"
-LOG_PATH = "/var/log/azurednssync2/update.log"
 SERVICE_NAME = "azurednssync2"
-SYNC_SCRIPT = "/opt/azurednssync2/azurednssync.py"
-PYTHON_BIN = "/opt/azurednssync2/venv/bin/python"
-
-@dashboard_bp.route("/")
-def index():
-    try:
-        status_output = subprocess.check_output(
-            ["systemctl", "status", SERVICE_NAME],
-            universal_newlines=True
-        )
-    except Exception as e:
-        status_output = f"Error retrieving service status: {e}"
-
-    if os.path.exists(LOG_PATH):
-        with open(LOG_PATH) as f:
-            sync_log = f.read()[-2048:]
-    else:
-        sync_log = ""
-
-    return render_template(
-        "index.html",
-        service_status=status_output,
-        sync_log=sync_log
-    )
-
-@dashboard_bp.route("/view_config")
-def view_config():
-    if os.path.isfile(CONFIG_PATH):
-        with open(CONFIG_PATH) as f:
-            config = f.read()
-        return render_template("view_config.html", config=config)
-    else:
-        flash("Config file not found.", "danger")
-        return redirect(url_for("dashboard.index"))
-
-@dashboard_bp.route("/download_cert")
-def download_cert():
-    if os.path.isfile(CERT_PATH):
-        return send_file(CERT_PATH, as_attachment=True)
-    else:
-        flash("Certificate file not found.", "danger")
-        return redirect(url_for("dashboard.index"))
-
-@dashboard_bp.route("/service_status")
-def service_status():
-    try:
-        status_output = subprocess.check_output(
-            ["systemctl", "status", SERVICE_NAME],
-            universal_newlines=True
-        )
-    except Exception as e:
-        status_output = f"Error retrieving service status: {e}"
-    return render_template(
-        "index.html",
-        service_status=status_output,
-        sync_log=get_sync_log()
-    )
-
-def get_sync_log():
-    if os.path.exists(LOG_PATH):
-        with open(LOG_PATH) as f:
-            return f.read()[-2048:]
-    return ""
-
-@dashboard_bp.route("/run_sync_now", methods=["POST"])
-def run_sync_now():
-    try:
-        result = subprocess.check_output(
-            [PYTHON_BIN, SYNC_SCRIPT],
-            universal_newlines=True,
-            stderr=subprocess.STDOUT
-        )
-        flash("Sync script executed. See log below.", "success")
-    except subprocess.CalledProcessError as e:
-        result = e.output
-        flash("Error running sync script.", "danger")
-    return render_template(
-        "index.html",
-        service_status=get_service_status(),
-        sync_log=get_sync_log() + "\n\n--- Run Sync Output ---\n" + result
-    )
+SYSTEMCTL_PATH = "/usr/bin/systemctl"
+CERT_PATH = "/var/lib/azurednssync2/certs/cert.pem"
+CONFIG_PATH = "/etc/azurednssync2/config.yaml"
+SYNC_LOG_PATH = "/var/log/azurednssync2/sync.log"
 
 def get_service_status():
     try:
-        return subprocess.check_output(
-            ["systemctl", "status", SERVICE_NAME],
-            universal_newlines=True
-        )
+        output = subprocess.check_output([SYSTEMCTL_PATH, "status", SERVICE_NAME], stderr=subprocess.STDOUT)
+        return output.decode()
+    except FileNotFoundError:
+        return "Error: systemctl not found on this system."
+    except subprocess.CalledProcessError as e:
+        return f"Service status error: {e.output.decode()}"
     except Exception as e:
-        return f"Error retrieving service status: {e}"
+        return f"Unexpected error retrieving service status: {str(e)}"
 
-@dashboard_bp.route("/restart_service", methods=["POST"])
+def run_sync():
+    # Example: Replace with your actual sync command or logic
+    # Could be a Python function or a subprocess call
+    try:
+        # Simulate sync
+        with open(SYNC_LOG_PATH, "a") as f:
+            f.write("Sync run at {}\n".format(str(datetime.datetime.now())))
+        return True, "Sync executed."
+    except Exception as e:
+        return False, f"Error running sync: {str(e)}"
+
 def restart_service():
     try:
-        subprocess.check_output(["systemctl", "restart", SERVICE_NAME])
-        flash("Service restarted.", "success")
+        output = subprocess.check_output([SYSTEMCTL_PATH, "restart", SERVICE_NAME], stderr=subprocess.STDOUT)
+        return True, "Service restarted successfully."
+    except FileNotFoundError:
+        return False, "Error: systemctl not found on this system."
+    except subprocess.CalledProcessError as e:
+        return False, f"Restart error: {e.output.decode()}"
     except Exception as e:
-        flash(f"Error restarting service: {e}", "danger")
-    return redirect(url_for("dashboard.index"))
+        return False, f"Unexpected error: {str(e)}"
+
+@dashboard_bp.route("/", methods=["GET", "POST"])
+def dashboard():
+    service_status = get_service_status()
+    sync_message = None
+
+    if os.path.isfile(SYNC_LOG_PATH):
+        with open(SYNC_LOG_PATH, "r") as f:
+            last_sync_log = f.read()
+    else:
+        last_sync_log = "No log found."
+
+    if "run_sync" in (getattr(flash, 'messages', []) or []):
+        success, sync_message = run_sync()
+        flash(sync_message, "success" if success else "danger")
+
+    if "restart_service" in (getattr(flash, 'messages', []) or []):
+        success, restart_message = restart_service()
+        flash(restart_message, "success" if success else "danger")
+
+    return render_template(
+        "dashboard.html",
+        service_status=service_status,
+        last_sync_log=last_sync_log
+    )
+
+@dashboard_bp.route("/download_cert")
+def download_cert():
+    if not os.path.isfile(CERT_PATH):
+        flash("Certificate file not found.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+    return send_file(CERT_PATH, as_attachment=True, download_name="cert.cer")
+
+@dashboard_bp.route("/view_config")
+def view_config():
+    if not os.path.isfile(CONFIG_PATH):
+        flash("Config file not found.", "danger")
+        return redirect(url_for("dashboard.dashboard"))
+    with open(CONFIG_PATH, "r") as f:
+        config_content = f.read()
+    return render_template("view_config.html", config_content=config_content)
+
+@dashboard_bp.route("/view_service_status")
+def view_service_status():
+    status = get_service_status()
+    return render_template("view_service_status.html", status=status)
+
+@dashboard_bp.route("/run_sync", methods=["POST"])
+def run_sync_route():
+    success, message = run_sync()
+    flash(message, "success" if success else "danger")
+    return redirect(url_for("dashboard.dashboard"))
+
+@dashboard_bp.route("/restart_service", methods=["POST"])
+def restart_service_route():
+    success, message = restart_service()
+    flash(message, "success" if success else "danger")
+    return redirect(url_for("dashboard.dashboard"))

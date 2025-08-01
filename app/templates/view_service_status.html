@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service Status</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Service Status</h1>
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+        <hr>
+        <pre>{{ status|default("No status returned.") }}</pre>
+    </div>
+</body>
+</html>

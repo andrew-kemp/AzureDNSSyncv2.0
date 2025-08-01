@@ -12,16 +12,19 @@ def create_app():
     from .routes import bp as main_bp
     app.register_blueprint(main_bp)
 
-    # Register setup blueprint
     from .routes_setup import setup_bp
     app.register_blueprint(setup_bp)
 
-    # Register certificate download blueprint
     from .routes_cert import cert_bp
     app.register_blueprint(cert_bp)
 
-    # Register MFA blueprint (if used)
-    # from .routes_mfa import mfa_bp
-    # app.register_blueprint(mfa_bp)
+    from .routes_config import config_bp
+    app.register_blueprint(config_bp)
+
+    from .routes_dashboard import dashboard_bp
+    app.register_blueprint(dashboard_bp)
+
+    from .routes_mfa import mfa_bp
+    app.register_blueprint(mfa_bp)
 
     return app

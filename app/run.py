@@ -5,6 +5,7 @@ from routes_setup import setup_bp, is_configured
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'change_this_in_production')
 
+# Register setup blueprint
 app.register_blueprint(setup_bp)
 
 @app.route("/")
@@ -13,16 +14,18 @@ def index():
         return redirect(url_for("login"))
     return render_template("index.html")
 
+# Login route
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        # TODO: Replace with secure authentication
+        # TODO: Replace with real authentication logic (e.g., PAM)
         if username == "admin" and password == "password":
             session['logged_in'] = True
             session['username'] = username
             flash("Successfully logged in.", "success")
+            # Redirect to setup if not configured
             if not is_configured():
                 return redirect(url_for("setup.setup"))
             return redirect(url_for("index"))

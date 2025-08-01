@@ -46,3 +46,13 @@ ul {
     margin-top: 10px;
     text-align: center;
 }
+
+/* Flash message categories for non-Bootstrap login page */
+.danger {
+    color: #e53935;
+    font-weight: bold;
+}
+.success {
+    color: #43a047;
+    font-weight: bold;
+}

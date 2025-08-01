@@ -82,6 +82,8 @@
 
             <button type="submit">Save</button>
         </form>
+        <hr>
+        <a href="{{ url_for('cert.download_cert') }}" class="btn btn-primary">Download Certificate</a>
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, msg in messages %}

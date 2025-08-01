@@ -1,5 +1,6 @@
 import os
 from flask import Flask, redirect, url_for, request, session, flash, render_template
+from pam import pam
 from routes_setup import setup_bp, is_configured
 
 app = Flask(__name__)
@@ -14,14 +15,13 @@ def index():
         return redirect(url_for("login"))
     return render_template("index.html")
 
-# Login route
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        # TODO: Replace with real authentication logic (e.g., PAM)
-        if username == "admin" and password == "password":
+        # Authenticate using Ubuntu system accounts via PAM
+        if pam().authenticate(username, password):
             session['logged_in'] = True
             session['username'] = username
             flash("Successfully logged in.", "success")
@@ -49,4 +49,11 @@ def enforce_login_and_setup():
         return redirect(url_for("setup.setup"))
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8443, ssl_context=("/etc/azurednssync2/certs/cert.pem", "/etc/azurednssync2/certs/key.pem"))
+    app.run(
+        host="0.0.0.0",
+        port=8443,
+        ssl_context=(
+            "/etc/azurednssync2/certs/cert.pem",
+            "/etc/azurednssync2/certs/key.pem"
+        )
+    )

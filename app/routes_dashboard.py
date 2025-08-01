@@ -1,19 +1,19 @@
 import os
 import subprocess
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
-CONFIG_PATH = "/etc/azurednssync/config.yaml"
-CERT_PATH = "/etc/azurednssync/certs/cert.pem"
-LOG_PATH = "/etc/azurednssync/update.log"
+# Updated paths for new install layout
+CONFIG_PATH = "/var/lib/azurednssync2/config.yaml"
+CERT_PATH = "/var/lib/azurednssync2/certs/cert.pem"
+LOG_PATH = "/var/log/azurednssync2/update.log"
 SERVICE_NAME = "azurednssync2"
-SYNC_SCRIPT = "/etc/azurednssync/azurednssync.py"
-PYTHON_BIN = "/etc/azurednssync/venv/bin/python"
+SYNC_SCRIPT = "/opt/azurednssync2/azurednssync.py"
+PYTHON_BIN = "/opt/azurednssync2/venv/bin/python"
 
 @dashboard_bp.route("/")
 def index():
-    # Service status
     try:
         status_output = subprocess.check_output(
             ["systemctl", "status", SERVICE_NAME],
@@ -22,10 +22,9 @@ def index():
     except Exception as e:
         status_output = f"Error retrieving service status: {e}"
 
-    # Last sync log
     if os.path.exists(LOG_PATH):
         with open(LOG_PATH) as f:
-            sync_log = f.read()[-2048:]  # show last 2k chars
+            sync_log = f.read()[-2048:]
     else:
         sync_log = ""
 
